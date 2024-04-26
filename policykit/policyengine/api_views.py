@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user
 from policyengine.serializers import MemberSummarySerializer
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def members(request):
     from policyengine.models import CommunityUser
