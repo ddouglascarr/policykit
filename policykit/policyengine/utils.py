@@ -183,6 +183,8 @@ def get_starterkits_info():
         kit_path = os.path.join(dir_path, kit_file)
         f = open(kit_path)
         data = json.loads(f.read())
+        print(kit_path)
+        print(data)
         if data.get("disabled"):
             continue
         starterkits.append({
