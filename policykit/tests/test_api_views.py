@@ -127,6 +127,21 @@ class APIViewsTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, 404)
 
+    def test_put_members_responds_404_if_user_exists_in_different_community(self):
+        _, other_user = TestUtils.create_slack_community_and_user(team_id="OTH", username="otheruser")
+        role = CommunityRole.objects.create(
+            role_name="test role", community=self.community)
+
+        self.client.force_login(user=self.user, backend="integrations.slack.auth_backends.SlackBackend")
+
+        # when a request is made to add 2 users to a role they do not have
+        response = self.client.put(
+            '/api/members',
+            data={'action': 'assign', 'role': role.id, 'members': [other_user.pk]},
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, 404)
+
     def test_put_members_responds_403_on_anon_user(self):
         response = self.client.put(
             '/api/members',

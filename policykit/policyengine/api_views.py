@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound 
 from django.contrib.auth import get_user
+from django.db import transaction
 from policyengine.serializers import MemberSummarySerializer, PutMembersRequestSerializer
 
 @api_view(['GET', 'PUT'])
@@ -11,8 +12,9 @@ def members(request):
     user = get_user(request)
 
     if request.method == 'GET':
+        members = get_members(user)
         return Response(
-            MemberSummarySerializer(get_members(user), many=True).data
+            MemberSummarySerializer(members, many=True).data
         )
 
     if request.method == 'PUT':
@@ -25,9 +27,10 @@ def members(request):
 
 def get_members(user):
     from policyengine.models import CommunityUser
-    users = CommunityUser.objects.filter(community__community=user.community.community)
-    return users
+    members = CommunityUser.objects.filter(community__community=user.community.community)
+    return members
 
+@transaction.atomic
 def put_members(user, action, role, members):
     from constitution.models import (PolicykitAddUserRole,
                                      PolicykitRemoveUserRole)
@@ -45,10 +48,12 @@ def put_members(user, action, role, members):
     action_model.community = user.constitution_community
     action_model.initiator = user
     try:
-        action_model.role = CommunityRole.objects.filter(pk=role, community__in=[user.community.community, user.constitution_community.community])[0]
+        action_model.role = CommunityRole.objects.filter(pk=role, community=user.community.community)[0]
     except IndexError:
         raise NotFound('Role not found')
 
     action_model.save(evaluate_action=False)
-    action_model.users.set(CommunityUser.objects.filter(id__in=members))
+    action_model.users.set(CommunityUser.objects.filter(id__in=members, community__community=user.community.community))
+    if len(action_model.users.all()) != len(members):
+        raise NotFound('User not found')
     action_model.save(evaluate_action=True)
