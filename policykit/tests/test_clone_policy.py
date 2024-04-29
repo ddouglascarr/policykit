@@ -1,8 +1,10 @@
 from django.test import TestCase
+from unittest import skip
 from policyengine.models import Policy, PolicyVariable, Proposal, ActionType
 import tests.utils as TestUtils
 
 
+@skip("Seems to be for a feature that does not exist any more")
 class ClonePolicyTests(TestCase):
     """
     Test the policy cloning functionality

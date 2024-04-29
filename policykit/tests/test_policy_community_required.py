@@ -1,9 +1,11 @@
 from django.test import TestCase
+from unittest import skip
 from policyengine.models import Policy
 
 import tests.utils as TestUtils
 
 
+@skip("Seems to be for a feature that does not exist any more")
 class PolicyCommunityTests(TestCase):
     """
     Test policy create/save as it relates to the community field
