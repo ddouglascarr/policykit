@@ -79,7 +79,7 @@ class APIViewsTestCase(APITestCase):
         )
         self.assertEqual(fixture_resp.status_code, 200)
 
-        # given users have the roles
+        # when they are revoked
         resp = self.client.put(
             '/api/members',
             data={'action': 'revoke', 'role': role.id, 'members': [user_2.pk, user_3.pk]},
@@ -87,7 +87,7 @@ class APIViewsTestCase(APITestCase):
         )
         self.assertEqual(fixture_resp.status_code, 200)
 
-        # then the new roles appear in the member list
+        # then the new roles no longer appear in the member list
         test_resp = self.client.get('/api/members')
         self.assertEqual(len(test_resp.data), 3)
 
@@ -103,8 +103,6 @@ class APIViewsTestCase(APITestCase):
 
     def test_put_members_responds_400_on_invalid_body(self):
         self.client.force_login(user=self.user, backend="integrations.slack.auth_backends.SlackBackend")
-
-
         response = self.client.put(
             '/api/members',
             data={'role': 1, 'members': [1]},  # action is missing

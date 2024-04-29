@@ -157,8 +157,6 @@ def evaluate_action(action):
     eligible_policies = get_eligible_policies(action)
     if not eligible_policies.exists():
         if action.kind != PolicyActionKind.TRIGGER:
-            import pdb
-            pdb.set_trace()
             raise Exception(f"no eligible policies found for governable action '{action}'")
         else:
             return None
