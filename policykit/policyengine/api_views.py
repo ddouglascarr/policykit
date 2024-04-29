@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound 
 from django.contrib.auth import get_user
 from policyengine.serializers import MemberSummarySerializer, PutMembersRequestSerializer
 
@@ -16,9 +17,8 @@ def members(request):
 
     if request.method == 'PUT':
         req = PutMembersRequestSerializer(data=request.data)
-        if not req.is_valid():
-            return Response(req.errors, status=400)
-        put_members(user, **req.data)
+        req.is_valid(raise_exception=True)
+        put_members(user, **req.validated_data)
         return Response({}, status=200)
 
     raise NotImplemented
@@ -44,7 +44,11 @@ def put_members(user, action, role, members):
 
     action_model.community = user.constitution_community
     action_model.initiator = user
-    action_model.role = CommunityRole.objects.filter(pk=role)[0]
+    try:
+        action_model.role = CommunityRole.objects.filter(pk=role, community__in=[user.community.community, user.constitution_community.community])[0]
+    except IndexError:
+        raise NotFound('Role not found')
+
     action_model.save(evaluate_action=False)
     action_model.users.set(CommunityUser.objects.filter(id__in=members))
     action_model.save(evaluate_action=True)
