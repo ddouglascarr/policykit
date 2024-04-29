@@ -8,6 +8,7 @@ from policyengine.serializers import MemberSummarySerializer, PutMembersRequestS
 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def members(request):
     user = get_user(request)
 
@@ -30,7 +31,6 @@ def get_members(user):
     members = CommunityUser.objects.filter(community__community=user.community.community)
     return members
 
-@transaction.atomic
 def put_members(user, action, role, members):
     from constitution.models import (PolicykitAddUserRole,
                                      PolicykitRemoveUserRole)
