@@ -18,7 +18,7 @@ def members(request):
         req = PutMembersRequestSerializer(data=request.data)
         if not req.is_valid():
             return Response(req.errors, status=400)
-        put_members(*req.data)
+        put_members(user, **req.data)
         return Response({}, status=200)
 
     raise NotImplemented
@@ -28,5 +28,23 @@ def get_members(user):
     users = CommunityUser.objects.filter(community__community=user.community.community)
     return users
 
-def put_members(action, role, members):
-    pass
+def put_members(user, action, role, members):
+    from constitution.models import (PolicykitAddUserRole,
+                                     PolicykitRemoveUserRole)
+
+    from policyengine.models import CommunityRole, CommunityUser
+
+    action_model = None
+    if action == 'assign':
+        action_model = PolicykitAddUserRole()
+    elif action == 'revoke':
+        action_model = PolicykitRemoveUserRole()
+    else:
+        raise ValueError('Invalid action')
+
+    action_model.community = user.constitution_community
+    action_model.initiator = user
+    action_model.role = CommunityRole.objects.filter(pk=role)[0]
+    action_model.save(evaluate_action=False)
+    action_model.users.set(CommunityUser.objects.filter(id__in=members))
+    action_model.save(evaluate_action=True)
