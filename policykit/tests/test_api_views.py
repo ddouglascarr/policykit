@@ -1,7 +1,4 @@
-import urllib3
-from rest_framework.test import APIClient, APITestCase, APIRequestFactory, force_authenticate
-from django.contrib.auth.models import User
-from django.test.client import MULTIPART_CONTENT
+from rest_framework.test import APITestCase
 
 import tests.utils as TestUtils
 
